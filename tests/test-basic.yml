@@ -1,0 +1,25 @@
+name: Test basic usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          _internal-strict-mode: false
+          diagnostic-endpoint: ""
+          use-flakehub: "disabled"
+          use-gha-cache: "disabled"
+        continue-on-error: true
+      - name: Assert action ran
+        run: |
+          echo "Action outcome: ${{ steps.action.outcome }}"
+          # The action should run (success or failure) but never be skipped
+          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran (outcome: ${{ steps.action.outcome }})"

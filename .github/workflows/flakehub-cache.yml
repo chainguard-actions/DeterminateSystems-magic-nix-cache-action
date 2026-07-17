@@ -1,0 +1,30 @@
+name: Push dev shell to FlakeHub Cache
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  push-dev-shell-to-flakehub-cache:
+    env:
+      ACTIONS_STEP_DEBUG: true
+    runs-on: ${{ matrix.systems.runner }}
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        systems:
+          - nix-system: aarch64-darwin
+            runner: macos-latest-xlarge
+          - nix-system: x86_64-linux
+            runner: UbuntuLatest32Cores128G
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: DeterminateSystems/determinate-nix-action@2a0be2498974c2b6327e19780488744384637d88 # main
+      - uses: DeterminateSystems/flakehub-cache-action@3be0931021788e3bb4df65f59a555039c2fa2d46 # main
+      - name: Build dev shell for ${{ matrix.systems.nix-system }} on ${{ matrix.systems.runner }}
+        env:
+          NIX_SYSTEM: ${{ matrix.systems.nix-system }}
+        run: |
+          nix build ".#devShells.$NIX_SYSTEM.default"

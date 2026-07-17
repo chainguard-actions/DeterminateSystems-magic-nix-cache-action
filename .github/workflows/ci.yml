@@ -1,0 +1,184 @@
+name: CI
+
+on:
+  merge_group:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: "write"
+      contents: "read"
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: DeterminateSystems/determinate-nix-action@2a0be2498974c2b6327e19780488744384637d88 # main
+      - uses: DeterminateSystems/magic-nix-cache-action@55718cd9ebf1737a061487d5ada21abf31e99a98 # main
+
+      - name: Check shell scripts
+        run: |
+          nix develop --command shellcheck ./.github/workflows/cache-test.sh
+
+      - name: Get npm cache directory
+        run: |
+          echo "NPM_CACHE_DIRECTORY=$(nix develop --command npm config get cache | tr -d '\n')" >> $GITHUB_ENV
+
+      - name: Set up npm cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ${{ env.NPM_CACHE_DIRECTORY }}
+          key: mnca-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            mnca-npm-cache
+
+      - name: Install npm dependencies
+        run: nix develop --command npm ci
+
+      - name: Check formatting
+        run: nix develop --command npm run check-fmt
+
+      - name: Lint
+        run: nix develop --command npm run lint
+
+      - name: Build
+        run: nix develop --command npm run build
+
+      - name: Package
+        run: nix develop --command npm run package
+
+      - name: git status
+        run: git status --porcelain=v1
+
+      - name: Ensure no unstaged changes
+        run: git diff --exit-code
+
+      - name: Ensure no staged changes
+        run: git diff --cached --exit-code
+
+  test-no-nix:
+    needs: build
+    name: "Test: Nix not installed"
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: "write"
+      contents: "read"
+    env:
+      ACTIONS_STEP_DEBUG: true
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Cache the store
+        uses: ./
+        with:
+          _internal-strict-mode: true
+
+  run-x86_64-linux-untrusted:
+    needs: build
+    name: Run x86_64-linux, Untrusted
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: "write"
+      contents: "read"
+    env:
+      ACTIONS_STEP_DEBUG: true
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@2a0be2498974c2b6327e19780488744384637d88 # main
+        with:
+          extra-conf: |
+            narinfo-cache-negative-ttl = 0
+            trusted-users = root
+      - name: Cache the store
+        uses: ./
+        with:
+          _internal-strict-mode: true
+
+  run-systems:
+    if: github.event_name == 'merge_group'
+    needs: build
+    name: "Test: ${{ matrix.systems.nix-system }} gha:${{matrix.use-gha-cache}},fhc:${{matrix.use-flakehub}},id:${{matrix.id-token}},determinate:${{matrix.determinate}}"
+    runs-on: "${{ matrix.systems.runner }}"
+    permissions:
+      id-token: "write"
+      contents: "read"
+    env:
+      ACTIONS_STEP_DEBUG: true
+    strategy:
+      fail-fast: false
+      matrix:
+        determinate: [true, false]
+        use-gha-cache: ["disabled", "no-preference"]
+        use-flakehub: ["disabled", "no-preference", "enabled"]
+        id-token: ["write", "none"]
+        systems:
+          - nix-system: "aarch64-darwin"
+            runner: "macos-latest"
+          - nix-system: "x86_64-darwin"
+            runner: "macos-15-intel"
+          - nix-system: "aarch64-linux"
+            runner: "namespace-profile-default-arm64"
+          - nix-system: "x86_64-linux"
+            runner: "ubuntu-latest"
+        include:
+          - determinate: true
+            use-gha-cache: "enabled"
+            use-flakehub: "disabled"
+            id-token: "write"
+            systems:
+              nix-system: "x86_64-linux"
+              runner: "ubuntu-latest"
+          - determinate: true
+            use-gha-cache: "enabled"
+            use-flakehub: "disabled"
+            id-token: "none"
+            systems:
+              nix-system: "x86_64-linux"
+              runner: "ubuntu-latest"
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Install Nix on ${{ matrix.systems.nix-system }} system
+        uses: DeterminateSystems/nix-installer-action@33c9ab3ef95cd57c164d9d6eb1f9a46338538d41 # main
+        with:
+          _internal-obliterate-actions-id-token-request-variables: ${{ matrix.id-token == 'none' }}
+          determinate: ${{ matrix.determinate }}
+          extra-conf: |
+            narinfo-cache-negative-ttl = 0
+      - name: Cache the store
+        uses: ./
+        with:
+          _internal-strict-mode: true
+          _internal-obliterate-actions-id-token-request-variables: ${{ matrix.id-token == 'none' }}
+          listen: 127.0.0.1:0
+          startup-notification-port: 0
+          use-gha-cache: ${{ matrix.use-gha-cache }}
+          use-flakehub: ${{ matrix.use-flakehub }}
+      - name: Check the cache for liveness
+        env:
+          EXPECT_FLAKEHUB: ${{ toJson(matrix.use-flakehub != 'disabled' && matrix.id-token == 'write') }}
+          EXPECT_GITHUB_CACHE: ${{ toJson(
+            (matrix.use-gha-cache != 'disabled')
+            && (
+            (!(matrix.use-flakehub != 'disabled' && matrix.id-token == 'write'))
+            || (matrix.use-gha-cache == 'enabled')
+            )
+            ) }}
+        run: |
+          .github/workflows/cache-test.sh
+
+  success:
+    runs-on: ubuntu-latest
+    needs: run-systems
+    if: always()
+    permissions: {}
+    steps:
+      - run: "true"
+      - run: |
+          echo "A dependent in the build matrix failed."
+          exit 1
+        if: |
+          contains(needs.*.result, 'failure') ||
+          contains(needs.*.result, 'cancelled')

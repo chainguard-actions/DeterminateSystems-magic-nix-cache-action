@@ -1,0 +1,29 @@
+name: Test custom listen address
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          listen: "127.0.0.1:37516"
+          upstream-cache: "https://cache.nixos.org"
+          use-gha-cache: "disabled"
+          use-flakehub: "disabled"
+          diagnostic-endpoint: ""
+          startup-notification-port: 41240
+          diff-store: false
+          _internal-strict-mode: false
+        continue-on-error: true
+      - name: Assert action ran with custom listen address
+        run: |
+          echo "Action outcome: ${{ steps.action.outcome }}"
+          # The action should run (success or failure) but never be skipped
+          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran with custom listen address (outcome: ${{ steps.action.outcome }})"

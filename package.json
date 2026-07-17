@@ -1,0 +1,53 @@
+{
+  "name": "magic-nix-cache-action",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "format": "prettier --write .",
+    "check-fmt": "prettier --check .",
+    "lint": "eslint src/**/*.ts",
+    "package": "ncc build",
+    "all": "npm run format && npm run lint && npm run build && npm run package"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DeterminateSystems/magic-nix-cache-action.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "LGPL",
+  "bugs": {
+    "url": "https://github.com/DeterminateSystems/magic-nix-cache-action/issues"
+  },
+  "homepage": "https://github.com/DeterminateSystems/magic-nix-cache-action#readme",
+  "dependencies": {
+    "@actions/core": "^3.0.0",
+    "@actions/exec": "^3.0.0",
+    "@actions/github": "^9.1.0",
+    "@actions/glob": "^0.6.1",
+    "detsys-ts": "github:DeterminateSystems/detsys-ts",
+    "got": "^14.6.6",
+    "tail": "^2.2.6"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@types/node": "^20.19.39",
+    "@types/tail": "^2.2.3",
+    "@types/uuid": "^9.0.8",
+    "@vercel/ncc": "^0.38.4",
+    "eslint": "^9.39.4",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-github": "^6.0.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.5",
+    "globals": "^16.5.0",
+    "prettier": "^3.8.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.58.1"
+  }
+}
