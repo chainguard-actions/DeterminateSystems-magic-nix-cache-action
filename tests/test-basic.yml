@@ -1,4 +1,4 @@
-name: Test basic usage
+name: Test basic usage (no Nix, no cache env vars)
 on:
   workflow_dispatch:
 jobs:
@@ -6,20 +6,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - id: action
+
+      - name: Run Magic Nix Cache action (expect graceful no-op)
+        id: action
         uses: .
         with:
-          _internal-strict-mode: false
+          # Disable diagnostics to avoid network calls
           diagnostic-endpoint: ""
+          # Disable FlakeHub to avoid network calls
           use-flakehub: "disabled"
+          # Disable GHA cache (no ACTIONS_CACHE_URL available under act)
           use-gha-cache: "disabled"
-        continue-on-error: true
-      - name: Assert action ran
+
+      - name: Assert action completed without failure
         run: |
-          echo "Action outcome: ${{ steps.action.outcome }}"
-          # The action should run (success or failure) but never be skipped
-          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
-            echo "FAIL: action was skipped unexpectedly"
-            exit 1
-          fi
-          echo "PASS: action ran (outcome: ${{ steps.action.outcome }})"
+          echo "Action completed successfully (graceful no-op without Nix/cache env vars)"
+          echo "PASS"

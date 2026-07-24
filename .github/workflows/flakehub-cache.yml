@@ -20,11 +20,11 @@ jobs:
           - nix-system: x86_64-linux
             runner: UbuntuLatest32Cores128G
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-      - uses: DeterminateSystems/determinate-nix-action@2a0be2498974c2b6327e19780488744384637d88 # main
-      - uses: DeterminateSystems/flakehub-cache-action@3be0931021788e3bb4df65f59a555039c2fa2d46 # main
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: DeterminateSystems/determinate-nix-action@d96678350ffd6a456235832eb11e1c491589b7bb # main
+      - uses: DeterminateSystems/flakehub-cache-action@77c6bddd7d747943530aaa578c57f233ee5d920e # main
       - name: Build dev shell for ${{ matrix.systems.nix-system }} on ${{ matrix.systems.runner }}
         env:
           NIX_SYSTEM: ${{ matrix.systems.nix-system }}
         run: |
-          nix build ".#devShells.$NIX_SYSTEM.default"
+          nix build ".#devShells.${NIX_SYSTEM}.default"

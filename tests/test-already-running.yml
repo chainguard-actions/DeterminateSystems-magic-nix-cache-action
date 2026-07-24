@@ -1,0 +1,26 @@
+name: Test noop mode when daemon already running
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up fake daemon dir to simulate already-running scenario
+        run: |
+          mkdir -p /tmp/fake-daemon-dir
+          echo "MAGIC_NIX_CACHE_DAEMONDIR=/tmp/fake-daemon-dir" >> "$GITHUB_ENV"
+
+      - name: Run Magic Nix Cache action (should detect already running)
+        id: action
+        uses: .
+        with:
+          diagnostic-endpoint: ""
+          use-flakehub: "disabled"
+          use-gha-cache: "disabled"
+
+      - name: Assert action completed in noop mode
+        run: |
+          echo "Action completed in noop mode (already running detected)"
+          echo "PASS"

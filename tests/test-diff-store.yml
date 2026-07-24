@@ -1,4 +1,4 @@
-name: Test custom listen address
+name: Test diff-store option
 on:
   workflow_dispatch:
 jobs:
@@ -7,17 +7,16 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Run Magic Nix Cache action with custom listen address
+      - name: Run Magic Nix Cache action with diff-store enabled
         id: action
         uses: .
         with:
           diagnostic-endpoint: ""
           use-flakehub: "disabled"
           use-gha-cache: "disabled"
-          listen: "127.0.0.1:37516"
-          startup-notification-port: "41240"
+          diff-store: "true"
 
       - name: Assert action completed without failure
         run: |
-          echo "Action completed successfully with custom listen address"
+          echo "Action completed successfully with diff-store enabled"
           echo "PASS"

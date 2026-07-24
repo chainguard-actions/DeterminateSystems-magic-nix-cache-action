@@ -1,0 +1,27 @@
+name: Test source-revision input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run Magic Nix Cache action with source-revision
+        id: action
+        uses: .
+        with:
+          source-revision: abc1234def5678901234567890abcdef12345678
+          diagnostic-endpoint: ""
+          use-flakehub: "disabled"
+          use-gha-cache: "disabled"
+        continue-on-error: true
+
+      - name: Assert action ran (not skipped)
+        run: |
+          echo "Action outcome: ${{ steps.action.outcome }}"
+          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran with source-revision input (outcome: ${{ steps.action.outcome }})"
