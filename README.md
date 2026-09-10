@@ -9,6 +9,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
 | v14 | [`v14`](https://github.com/chainguard-actions/DeterminateSystems-magic-nix-cache-action/tree/v14) | [`908b263`](https://github.com/DeterminateSystems/magic-nix-cache-action/commit/908b263ff629f4cc17666315b7fd3ec127c6244d) |
+| v15 | [`v15`](https://github.com/chainguard-actions/DeterminateSystems-magic-nix-cache-action/tree/v15) | [`84c0677`](https://github.com/DeterminateSystems/magic-nix-cache-action/commit/84c0677f58dcedf3b91f8223ce36a9ea5b3c84b7) |
 
 ## Privacy
 
