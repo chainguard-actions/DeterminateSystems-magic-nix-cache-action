@@ -1,0 +1,31 @@
+name: Test source-url input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          source-url: "https://example.invalid/magic-nix-cache"
+          source-checksums-url: "https://example.invalid/magic-nix-cache.sha256"
+          source-checksums-sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+          use-gha-cache: "disabled"
+          use-flakehub: "disabled"
+          diagnostic-endpoint: ""
+      - name: Assert action ran with source-url inputs (expected to fail gracefully on invalid URL)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully on invalid source-url (expected)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

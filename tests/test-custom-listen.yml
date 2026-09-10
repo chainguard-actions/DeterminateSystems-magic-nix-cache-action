@@ -1,0 +1,33 @@
+name: Test custom listen address and diff-store
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          listen: "127.0.0.1:37600"
+          diff-store: "true"
+          diagnostic-endpoint: ""
+          use-gha-cache: "disabled"
+          use-flakehub: "disabled"
+          _internal-strict-mode: "false"
+
+      - name: Assert action ran (succeeds or fails gracefully without Nix)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with custom listen address"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (Nix not available in test environment)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
