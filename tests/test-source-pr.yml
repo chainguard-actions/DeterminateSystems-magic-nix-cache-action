@@ -14,15 +14,13 @@ jobs:
           use-gha-cache: "disabled"
           use-flakehub: "disabled"
           diagnostic-endpoint: ""
-      - name: Assert action ran with source-pr input
+      - name: Assert action ran (source-pr input exercised)
         env:
           OUTCOME: ${{ steps.action.outcome }}
         run: |
           echo "outcome: $OUTCOME"
-          if [ "$OUTCOME" = "success" ]; then
-            echo "PASS: action succeeded with source-pr"
-          elif [ "$OUTCOME" = "failure" ]; then
-            echo "PASS: action failed gracefully with source-pr (expected in harness)"
+          if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action ran with source-pr input (outcome: $OUTCOME)"
           else
             echo "FAIL: unexpected outcome '$OUTCOME'"
             exit 1

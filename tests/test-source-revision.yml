@@ -10,19 +10,17 @@ jobs:
         uses: .
         continue-on-error: true
         with:
-          source-revision: "abc1234def5678901234567890123456789012ab"
+          source-revision: "main"
           use-gha-cache: "disabled"
           use-flakehub: "disabled"
           diagnostic-endpoint: ""
-      - name: Assert action ran with source-revision input
+      - name: Assert action ran (source-revision input exercised)
         env:
           OUTCOME: ${{ steps.action.outcome }}
         run: |
           echo "outcome: $OUTCOME"
-          if [ "$OUTCOME" = "success" ]; then
-            echo "PASS: action succeeded with source-revision"
-          elif [ "$OUTCOME" = "failure" ]; then
-            echo "PASS: action failed gracefully with source-revision (expected in harness)"
+          if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action ran with source-revision input (outcome: $OUTCOME)"
           else
             echo "FAIL: unexpected outcome '$OUTCOME'"
             exit 1

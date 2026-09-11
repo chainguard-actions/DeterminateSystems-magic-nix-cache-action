@@ -81,7 +81,6 @@ inputs:
     default: false
 
 runs:
-  pre: chainguard-phonehome.js
   using: "node24"
   main: "./dist/index.js"
   post: "./dist/index.js"
